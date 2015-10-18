@@ -1,4 +1,9 @@
+#include <Arduino.h>
 #include "NewPing.h"
+void setup();
+void loop();
+#line 1 "src/sketch.ino"
+//#include "NewPing.h"
 
 #define DISTANCIA_MAXIMA                                200
 

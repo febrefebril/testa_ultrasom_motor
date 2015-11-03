@@ -71,7 +71,7 @@ void setup()
     pinMode(PIN_MOTOR_DIREITO,  OUTPUT);
     pinMode(PIN_MOTOR_FRONTAL,  OUTPUT);
     mySerial.begin(9600);
-    mySerial.println("Hello, world?");
+    mySerial.println(F("Hello, world?"));
 }
 void alerta_vibratorio(int pino, int potencia, int quantidade, int tempo_ligado)
 {
@@ -96,11 +96,11 @@ void testa_motor(NewPing &ultra_som, int &motor_ativado, int pin_motor, const ch
     distancia = ultra_som.convert_cm(ultra_som.ping_median());
     if (DEBUG == 1) 
     {
-        Serial.print("Ping ");
+        Serial.print(F("Ping "));
         Serial.print(posicao);
-        Serial.print(": ");
+        Serial.print(F(": "));
         Serial.print(distancia);
-        Serial.println("cm");
+        Serial.println(F("cm"));
     }
 
     if (distancia <= 5 && distancia != 0)
@@ -109,7 +109,7 @@ void testa_motor(NewPing &ultra_som, int &motor_ativado, int pin_motor, const ch
 
         if (DEBUG == 1)
         {
-            Serial.print("Vibrando motor ");
+            Serial.print(F("Vibrando motor "));
             Serial.println(posicao);
         }
 
@@ -126,9 +126,9 @@ int distancia_cm(NewPing &sonar, const char *posicao)
     int distancia = sonar.convert_cm(sonar.ping_median());
     if (DEBUG == 1) 
     {
-        Serial.print("Distancia lida em cm do ultrasom: "); 
+        Serial.print(F("Distancia lida em cm do ultrasom: ")); 
         Serial.print(posicao);
-        Serial.print(" ");
+        Serial.print(F(" "));
         Serial.println(distancia);
     }
     if (posicao == "frontal")
@@ -154,7 +154,7 @@ int compara_distancias(int distancia_atual, int distancia_anterior)
     {
         if (DEBUG == 1)
         {
-           Serial.println("Distancia fora do alcance. Nao acionaremos os motores");
+           Serial.println(F("Distancia fora do alcance. Nao acionaremos os motores"));
         }
         return distancia_atual;
     }
@@ -162,7 +162,7 @@ int compara_distancias(int distancia_atual, int distancia_anterior)
     int resultado_comparacao = distancia_atual - distancia_anterior;
     if (DEBUG == 1)
     {
-        Serial.print("Resultado da comparacao: ");
+        Serial.print(F("Resultado da comparacao: "));
         Serial.println(resultado_comparacao);
     }
     return resultado_comparacao;
@@ -176,7 +176,7 @@ void tratar_motor(int delta_d, int distancia_atual, const char *posicao)
     {
         if (DEBUG == 1)
         {
-            Serial.println("Motores nao serao acionados");
+            Serial.println(F("Motores nao serao acionados"));
             return;
         }
     }
@@ -199,7 +199,7 @@ void procedimento_risco(const char *posicao)
 
     if (DEBUG == 1)
     {
-        Serial.print("Vibrando em distancia de risco o motor ");
+        Serial.print(F("Vibrando em distancia de risco o motor "));
         Serial.println(posicao);
     }
     if (posicao == "frontal")
@@ -220,7 +220,7 @@ void procedimento_alerta(const char *posicao)
 {
     if (DEBUG == 1)
     {
-        Serial.print("Vibrando por variacao de distancia e distancia de alerta o motor ");
+        Serial.print(F("Vibrando por variacao de distancia e distancia de alerta o motor "));
         Serial.println(posicao);
     }
     if (posicao == "frontal")
@@ -246,12 +246,12 @@ void printa_motores_testados(NewPing &ultra_som, int &motor_testado, const char 
 
     if (DEBUG == 1)
     {
-        Serial.print("Motor ");
+        Serial.print(F("Motor "));
         Serial.print(posicao);
-        Serial.println(" testado");
+        Serial.println(F(" testado"));
         distancia = ultra_som.convert_cm(ultra_som.ping_median());
         Serial.print(distancia);
-        Serial.println("cm");
+        Serial.println(F("cm"));
     }
     
 }
@@ -276,11 +276,11 @@ void loop()
         }        
         if (byte_lido == 0) {
             DEBUG = 0;
-            Serial.println("Saindo do modo debug");
+            Serial.println(F("Saindo do modo debug"));
         }
         if (byte_lido == 1) {
            DEBUG = 1; 
-           Serial.println("Entrando no modo debug");
+           Serial.println(F("Entrando no modo debug"));
         }
     }
 
@@ -302,7 +302,7 @@ void loop()
     {
         if (DEBUG == 1)
         {
-            Serial.println("Entrando no modo de navegacao");
+            Serial.println(F("Entrando no modo de navegacao"));
         }
         //tratar_motor(compara_distancias(distancia_cm(frontal, "frontal"), DISTANCIA_ANTERIOR_FRONTAL), DISTANCIA_ATUAL_FRONTAL, "frontal");
         //DISTANCIA_ANTERIOR_FRONTAL = DISTANCIA_ATUAL_FRONTAL;

@@ -18,7 +18,16 @@
 #define PIN_MOTOR_FRONTAL              10
 
 #define LIMITE_ALERTA                  90
-#define DISTANCIA_RISCO                25
+#define DISTANCIA_RISCO                15
+#define VARIACAO_ALERTA                -10
+
+#define POTENCIA_RISCO                 254
+#define DELAY_RISCO                    100
+#define REPETICAO_RISCO                2
+
+#define POTENCIA_ALERTA                150
+#define DELAY_ALERTA                   100
+#define REPETICAO_ALERTA               2
 
 int DEBUG = 1; 
 
@@ -110,154 +119,123 @@ void testa_motor(NewPing &ultra_som, int &motor_ativado, int pin_motor, const ch
 
 }
 /*
-                COMPARE MOTORES FRONTAIS 
+                LE DISTANCIA EM CM 
 */
-int compare_distancias_frontais(NewPing &sonar)
+int distancia_cm(NewPing &sonar, const char *posicao)
 {
-    int delta_d = 0;
-    DISTANCIA_ATUAL_FRONTAL = sonar.convert_cm(sonar.ping_median());
-    if (DEBUG == 1)
+    int distancia = sonar.convert_cm(sonar.ping_median());
+    if (DEBUG == 1) 
     {
-        Serial.print("Distancia atual frontal: ");      
-        Serial.println(DISTANCIA_ATUAL_FRONTAL);
-        Serial.print("Distancia anterior frontal: ");      
-        Serial.println(DISTANCIA_ANTERIOR_FRONTAL);
+        Serial.print("Distancia lida em cm do ultrasom: "); 
+        Serial.print(posicao);
+        Serial.print(" ");
+        Serial.println(distancia);
     }
-    if (DISTANCIA_ATUAL_FRONTAL != 0) 
+    if (posicao == "frontal")
     {
-        delta_d = DISTANCIA_ATUAL_FRONTAL - DISTANCIA_ANTERIOR_FRONTAL;    
-        if (DEBUG ==1)
-        {
-            Serial.print("Diferenca entre distancia atual e anterio: ");
-            Serial.println(delta_d);
-        }
-        return delta_d;
+        DISTANCIA_ATUAL_FRONTAL = distancia;
     }
-}
-
-void trate_motores_frontais(int comparacao_distancias)
-{
-   if (DISTANCIA_ATUAL_FRONTAL == 0) 
-   {
-      return;
-   }
-
-   if (comparacao_distancias < -10 && DISTANCIA_ATUAL_FRONTAL < LIMITE_ALERTA) 
-   {
-       if (DEBUG == 1)
-       {
-            Serial.println("Distancia abaixo do limite de alerta e alterada em mais de 10 cm");
-       }
-       alerta_vibratorio(PIN_MOTOR_FRONTAL, 254, 2, 100);
-   }
-   if (DISTANCIA_ATUAL_FRONTAL <= DISTANCIA_RISCO)
-   {
-       if (DEBUG == 1)
-       {
-            Serial.println("Distancia abaixo da distancia de risco");
-       }
-       alerta_vibratorio(PIN_MOTOR_FRONTAL, 254, 5, 100);
-   }
+    else if (posicao == "direito")
+    {
+        DISTANCIA_ATUAL_DIREITA = distancia;
+    }
+    else
+    {
+        DISTANCIA_ATUAL_ESQUERDA = distancia;
+    }
+    return distancia;
 }
 /*
-                COMPARE MOTORES ESQUERDOS
+                COMPARA COM A DISTANCIA ANTERIOR
 */
-int compare_distancias_esquerdas(NewPing &sonar)
+int compara_distancias(int distancia_atual, int distancia_anterior)
 {
-    int delta_d = 0;
-    DISTANCIA_ATUAL_ESQUERDA = sonar.convert_cm(sonar.ping_median());
+    if (distancia_atual == 0)
+    {
+        if (DEBUG == 1)
+        {
+           Serial.println("Distancia fora do alcance. Nao acionaremos os motores");
+        }
+        return distancia_atual;
+    }
+
+    int resultado_comparacao = distancia_atual - distancia_anterior;
     if (DEBUG == 1)
     {
-        Serial.print("Distancia atual esquerda: ");      
-        Serial.println(DISTANCIA_ATUAL_ESQUERDA);
-        Serial.print("Distancia anterior esquerda: ");      
-        Serial.println(DISTANCIA_ANTERIOR_ESQUERDA);
+        Serial.print("Resultado da comparacao: ");
+        Serial.println(resultado_comparacao);
     }
-    if (DISTANCIA_ATUAL_ESQUERDA != 0) 
-    {
-        delta_d = DISTANCIA_ATUAL_ESQUERDA - DISTANCIA_ANTERIOR_ESQUERDA;    
-        if (DEBUG ==1)
-        {
-            Serial.print("Diferenca entre distancia atual e anterio: ");
-            Serial.println(delta_d);
-        }
-        return delta_d;
-    }
-}
-
-void trate_motores_esquerdos(int comparacao_distancias)
-{
-   if (DISTANCIA_ATUAL_ESQUERDA == 0) 
-   {
-      return;
-   }
-
-   if (comparacao_distancias < -10 && DISTANCIA_ATUAL_ESQUERDA < LIMITE_ALERTA) 
-   {
-       if (DEBUG == 1)
-       {
-            Serial.println("Distancia esquerda abaixo do limite de alerta e alterada em mais de 10 cm");
-       }
-       alerta_vibratorio(PIN_MOTOR_ESQUERDO, 254, 2, 100);
-   }
-   if (DISTANCIA_ATUAL_ESQUERDA <= DISTANCIA_RISCO)
-   {
-       if (DEBUG == 1)
-       {
-            Serial.println("Distancia esquerda abaixo da distancia de risco");
-       }
-       alerta_vibratorio(PIN_MOTOR_ESQUERDO, 254, 5, 100);
-   }
+    return resultado_comparacao;
 }
 /*
-                COMPARE MOTORES DIREITOS
+                TRATE MOTORES
 */
-int compare_distancias_direitas(NewPing &sonar)
+void tratar_motor(int delta_d, int distancia_atual, const char *posicao)
 {
-    int delta_d = 0;
-    DISTANCIA_ATUAL_DIREITA = sonar.convert_cm(sonar.ping_median());
-    if (DEBUG == 1)
+    if (delta_d == 0 || distancia_atual == 0)
     {
-        Serial.print("Distancia atual direita: ");      
-        Serial.println(DISTANCIA_ATUAL_DIREITA);
-        Serial.print("Distancia anterior direita: ");      
-        Serial.println(DISTANCIA_ANTERIOR_DIREITA);
-    }
-    if (DISTANCIA_ATUAL_DIREITA != 0) 
-    {
-        delta_d = DISTANCIA_ATUAL_DIREITA - DISTANCIA_ANTERIOR_DIREITA;    
-        if (DEBUG ==1)
+        if (DEBUG == 1)
         {
-            Serial.print("Diferenca entre distancia atual e anterio: ");
-            Serial.println(delta_d);
+            Serial.println("Motores nao serao acionados");
+            return;
         }
-        return delta_d;
+    }
+
+    if (distancia_atual <= DISTANCIA_RISCO)
+    {
+          procedimento_risco(posicao);
+          return;
+    }
+
+    if (delta_d <= VARIACAO_ALERTA && distancia_atual <= LIMITE_ALERTA)
+    {
+        procedimento_alerta(posicao);
+        return;
     }
 }
 
-void trate_motores_direitos(int comparacao_distancias)
+void procedimento_risco(const char *posicao)
 {
-   if (DISTANCIA_ATUAL_DIREITA == 0) 
-   {
-      return;
-   }
 
-   if (comparacao_distancias < -10 && DISTANCIA_ATUAL_DIREITA < LIMITE_ALERTA) 
-   {
-       if (DEBUG == 1)
-       {
-            Serial.println("Distancia direita abaixo do limite de alerta e alterada em mais de 10 cm");
-       }
-       alerta_vibratorio(PIN_MOTOR_ESQUERDO, 254, 2, 100);
-   }
-   if (DISTANCIA_ATUAL_DIREITA <= DISTANCIA_RISCO)
-   {
-       if (DEBUG == 1)
-       {
-            Serial.println("Distancia direita abaixo da distancia de risco");
-       }
-       alerta_vibratorio(PIN_MOTOR_ESQUERDO, 254, 5, 100);
-   }
+    if (DEBUG == 1)
+    {
+        Serial.print("Vibrando em distancia de risco o motor ");
+        Serial.println(posicao);
+    }
+    if (posicao == "frontal")
+    {
+        alerta_vibratorio(PIN_MOTOR_FRONTAL, POTENCIA_RISCO, REPETICAO_RISCO, DELAY_RISCO);
+    }
+    else if (posicao == "esquerdo")
+    {
+        alerta_vibratorio(PIN_MOTOR_ESQUERDO, POTENCIA_RISCO, REPETICAO_RISCO, DELAY_RISCO);
+    }
+    else {
+        alerta_vibratorio(PIN_MOTOR_DIREITO, POTENCIA_RISCO, REPETICAO_RISCO, DELAY_RISCO);
+    }
+    return;
+}
+
+void procedimento_alerta(const char *posicao)
+{
+    if (DEBUG == 1)
+    {
+        Serial.print("Vibrando por variacao de distancia e distancia de alerta o motor ");
+        Serial.println(posicao);
+    }
+    if (posicao == "frontal")
+    {
+        alerta_vibratorio(PIN_MOTOR_FRONTAL, POTENCIA_ALERTA, REPETICAO_ALERTA, DELAY_ALERTA);
+    }
+    else if (posicao == "esquerdo")
+    {
+        alerta_vibratorio(PIN_MOTOR_ESQUERDO, POTENCIA_ALERTA, REPETICAO_ALERTA, DELAY_ALERTA);
+    }
+    else {
+        alerta_vibratorio(PIN_MOTOR_DIREITO, POTENCIA_ALERTA, REPETICAO_ALERTA, DELAY_ALERTA);
+    }
+    return;
+    
 }
 
 void printa_motores_testados(NewPing &ultra_som, int &motor_testado, const char *posicao)
@@ -322,16 +300,32 @@ void loop()
     
     if (CONTROLE_EXECUCAO == 1)
     {
-        if (DEBUG == 1) 
+        if (DEBUG == 1)
         {
-            Serial.println("Entrando no modo de navegacao");     
+            Serial.println("Entrando no modo de navegacao");
         }
-        trate_motores_frontais(compare_distancias_frontais(frontal));
+        //tratar_motor(compara_distancias(distancia_cm(frontal, "frontal"), DISTANCIA_ANTERIOR_FRONTAL), DISTANCIA_ATUAL_FRONTAL, "frontal");
+        //DISTANCIA_ANTERIOR_FRONTAL = DISTANCIA_ATUAL_FRONTAL;
+        //tratar_motor(compara_distancias(distancia_cm(esquerdo, "esquerda"), DISTANCIA_ANTERIOR_ESQUERDA), DISTANCIA_ATUAL_ESQUERDA, "esquerda");
+        //DISTANCIA_ANTERIOR_ESQUERDA = DISTANCIA_ATUAL_ESQUERDA;
+        //tratar_motor(compara_distancias(distancia_cm(direito, "direita"), DISTANCIA_ANTERIOR_DIREITA), DISTANCIA_ATUAL_DIREITA, "direita");
+        //DISTANCIA_ANTERIOR_DIREITA = DISTANCIA_ATUAL_DIREITA;
+
+        int delta_d = 0;
+        DISTANCIA_ATUAL_FRONTAL = distancia_cm(frontal, "frontal");
+        delta_d = compara_distancias(DISTANCIA_ATUAL_FRONTAL, DISTANCIA_ANTERIOR_FRONTAL);
+        tratar_motor(delta_d, DISTANCIA_ATUAL_FRONTAL, "frontal");
         DISTANCIA_ANTERIOR_FRONTAL = DISTANCIA_ATUAL_FRONTAL;
-        trate_motores_esquerdos(compare_distancias_esquerdas(esquerdo));
+
+
+        DISTANCIA_ATUAL_ESQUERDA = distancia_cm(esquerdo, "esquerdo");
+        delta_d = compara_distancias(DISTANCIA_ATUAL_ESQUERDA, DISTANCIA_ANTERIOR_ESQUERDA);
+        tratar_motor(delta_d, DISTANCIA_ATUAL_ESQUERDA, "esquerdo");
         DISTANCIA_ANTERIOR_ESQUERDA = DISTANCIA_ATUAL_ESQUERDA;
-        trate_motores_direitos(compare_distancias_direitas(direito));
+
+        DISTANCIA_ATUAL_DIREITA = distancia_cm(direito, "direito");
+        delta_d = compara_distancias(DISTANCIA_ATUAL_DIREITA, DISTANCIA_ANTERIOR_DIREITA);
+        tratar_motor(delta_d, DISTANCIA_ATUAL_DIREITA, "direito");
         DISTANCIA_ANTERIOR_DIREITA = DISTANCIA_ATUAL_DIREITA;
-    
     }
 }

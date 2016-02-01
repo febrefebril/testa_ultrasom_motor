@@ -177,8 +177,8 @@ void tratar_motor(int delta_d, int distancia_atual, const char *posicao)
         if (DEBUG == 1)
         {
             Serial.println(F("Motores nao serao acionados"));
-            return;
         }
+        return;
     }
 
     if (distancia_atual <= DISTANCIA_RISCO)
@@ -261,19 +261,19 @@ void loop()
     if (Serial.available() > 0)
     {
         byte_lido = Serial.parseInt();
-        if (DEBUG == 1)
-        {
-            //Serial.print("Foi Recebido: ");      
-            //Serial.println(bytes_lidos, DEC);
-            if (byte_lido == 44)
-            {//espera por uma virgula
-               Serial.println(); 
-            }
-            else
-            {//printa byte_lido
-                Serial.write(byte_lido); 
-            }
-        }        
+        //if (DEBUG == 1)
+        //{
+        //    //Serial.print("Foi Recebido: ");      
+        //    //Serial.println(bytes_lidos, DEC);
+        //    if (byte_lido == 44)
+        //    {//espera por uma virgula
+        //       Serial.println(); 
+        //    }
+        //    else
+        //    {//printa byte_lido
+        //        Serial.write(byte_lido); 
+        //    }
+        //}        
         if (byte_lido == 0) {
             DEBUG = 0;
             Serial.println(F("Saindo do modo debug"));
